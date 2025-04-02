@@ -1,49 +1,70 @@
+# Importamos BaseModel de Pydantic para la validación de datos
 from pydantic import BaseModel
-from datetime import datetime
+# Importamos datetime y date para manejar fechas
+from datetime import datetime, date
+# Importamos Optional para definir atributos opcionales en los modelos
 from typing import Optional
 
+# ---------------------------- MODELO CLIENTE ----------------------------
+
+# Modelo base para un Cliente
 class ClienteBase(BaseModel):
-    nombre: str
-    apellidos: str
-    direccion: str
-    fecha_nac: datetime  # Usar datetime para coincidir con la BD
+    nombre: str        # Nombre del cliente
+    apellidos: str     # Apellidos del cliente
+    direccion: str     # Dirección del cliente
+    fecha_nac: date    # Fecha de nacimiento del cliente (usa `date` para coincidir con la base de datos)
 
+# Modelo para la creación de un Cliente (se hereda de ClienteBase sin modificaciones)
 class ClienteCreate(ClienteBase):
-    pass
+    pass  # No se agregan nuevos atributos, solo se reutiliza el modelo base
 
+# Modelo de respuesta para un Cliente (se usa al devolver datos)
 class ClienteResponse(ClienteBase):
-    id: int
+    id: int  # Se añade el ID del cliente, que es asignado por la base de datos
+
     class Config:
-        from_attributes = True  # Para ORM
+        from_attributes = True  # Permite convertir datos obtenidos de la base de datos a un objeto Pydantic
 
+# ---------------------------- MODELO PROVEEDOR ----------------------------
+
+# Modelo base para un Proveedor
 class ProveedorBase(BaseModel):
-    nit: str
-    nombre: str
-    direccion: str
+    nit: str       # Número de Identificación Tributaria del proveedor
+    nombre: str    # Nombre del proveedor
+    direccion: str # Dirección del proveedor
 
+# Modelo de respuesta para un Proveedor (sin modificaciones adicionales)
 class ProveedorResponse(ProveedorBase):
     class Config:
-        from_attributes = True
+        from_attributes = True  # Habilita la conversión de datos desde la base de datos
 
+# ---------------------------- MODELO PRODUCTO ----------------------------
+
+# Modelo base para un Producto
 class ProductoBase(BaseModel):
-    codigo: str
-    nombre: str
-    precio_unitario: float
-    nit_proveedor: str  # Coincide con el nombre de la columna en BD
+    codigo: str          # Código único del producto
+    nombre: str          # Nombre del producto
+    precio_unitario: float # Precio unitario del producto
+    nit_proveedor: str   # Relación con el proveedor del producto (clave foránea)
 
+# Modelo de respuesta para un Producto (se hereda sin modificaciones)
 class ProductoResponse(ProductoBase):
     class Config:
-        from_attributes = True
+        from_attributes = True  # Permite conversión automática desde la base de datos
 
-class CompraBase(BaseModel):
-    cantidad: int
-    fecha_compra: Optional[datetime] = None  # Opcional porque tiene DEFAULT en BD
+# ---------------------------- MODELO COMPRA ----------------------------
 
-class CompraCreate(CompraBase):
-    id_cliente: int
-    codigo_producto: str
+# Modelo para la creación de una Compra
+class CompraCreate(BaseModel):
+    id_cliente: int       # ID del cliente que realiza la compra (clave foránea)
+    codigo_producto: str  # Código del producto comprado (clave foránea)
+    cantidad: int         # Cantidad de productos comprados
 
-class CompraResponse(CompraBase):
-    id: int
-    cliente: ClienteResponse  # Relación anidada
-    producto: ProductoBase    # Relación anidada
+# Modelo de respuesta para una Compra
+class CompraResponse(BaseModel):
+    cliente: ClienteResponse   # Información del cliente que realizó la compra
+    producto: ProductoResponse # Información del producto comprado
+    cantidad: int              # Cantidad comprada
+    total: float               # Total calculado (precio * cantidad)
+    fecha_compra: Optional[datetime] = None  # Fecha en la que se realizó la compra (puede ser opcional)
+
