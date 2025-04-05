@@ -1,3 +1,6 @@
+CREATE DATABASE venta;
+USE venta;
+
 -- 1. Creación de la tabla Proveedor
 CREATE TABLE Proveedor (
     nit VARCHAR(20) PRIMARY KEY,
@@ -61,3 +64,5 @@ INSERT INTO Compra (id_cliente, codigo_producto, cantidad) VALUES
 (3, 'P100', 1),
 (3, 'P200', 1),
 (3, 'P300', 1);
+
+Alter table compra add total float NOT NULL DEFAULT 0;

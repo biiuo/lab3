@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 import mysql.connector
 
 # Importamos los modelos que utilizaremos para validar los datos
-from models import ClienteCreate, ClienteResponse
+from models import ClienteCreate, ClienteResponse, ClienteBase
 
 # Importamos la función get_db que nos proporciona una conexión a la base de datos
 from db import get_db
@@ -72,3 +72,77 @@ def listar_clientes(db = Depends(get_db)):
     cursor.execute("SELECT * FROM Cliente")  # Ejecutamos la consulta SQL para obtener todos los clientes
     return cursor.fetchall()  # Retornamos la lista de clientes obtenida de la base de datos
 
+@router.put("/{cliente_id}", response_model=ClienteResponse)
+def actualizar_cliente(cliente_id: int, cliente: ClienteBase, nuevo_id: int = None, db: mysql.connector.MySQLConnection = Depends(get_db)):
+    cursor = db.cursor(dictionary=True)
+    try:
+        # Verificar si el cliente existe
+        cursor.execute("SELECT * FROM Cliente WHERE id = %s", (cliente_id,))
+        cliente_actual = cursor.fetchone()
+        if not cliente_actual:
+            raise HTTPException(status_code=404, detail="Cliente no encontrado")
+
+        if nuevo_id and nuevo_id != cliente_id:
+            # Verificar que el nuevo ID no esté en uso
+            cursor.execute("SELECT id FROM Cliente WHERE id = %s", (nuevo_id,))
+            if cursor.fetchone():
+                raise HTTPException(status_code=400, detail="El nuevo ID ya está en uso")
+
+            # Insertar el nuevo cliente con el nuevo ID
+            cursor.execute(
+                "INSERT INTO Cliente (id, nombre, apellidos, direccion, fecha_nac) VALUES (%s, %s, %s, %s, %s)",
+                (nuevo_id, cliente.nombre, cliente.apellidos, cliente.direccion, cliente.fecha_nac)
+            )
+            
+            # Actualizar id_cliente en Compra
+            cursor.execute("UPDATE Compra SET id_cliente = %s WHERE id_cliente = %s", (nuevo_id, cliente_id))
+
+            # Eliminar el cliente antiguo
+            cursor.execute("DELETE FROM Cliente WHERE id = %s", (cliente_id,))
+
+        else:
+            # Actualizar solo los datos del cliente si el ID no cambia
+            cursor.execute(
+                "UPDATE Cliente SET nombre = %s, apellidos = %s, direccion = %s, fecha_nac = %s WHERE id = %s",
+                (cliente.nombre, cliente.apellidos, cliente.direccion, cliente.fecha_nac, cliente_id)
+            )
+
+        db.commit()
+
+        # Obtener los datos actualizados
+        cursor.execute("SELECT * FROM Cliente WHERE id = %s", (nuevo_id if nuevo_id else cliente_id,))
+        cliente_actualizado = cursor.fetchone()
+
+        return ClienteResponse(**cliente_actualizado)
+
+    except mysql.connector.Error as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+
+    finally:
+        cursor.close()
+
+@router.delete("/{id_cliente}")
+def eliminar_cliente(id_cliente: int, db = Depends(get_db)):
+    cursor = db.cursor()
+    try:
+        # Verificar si el cliente existe
+        cursor.execute("SELECT * FROM Cliente WHERE id = %s", (id_cliente,))
+        cliente = cursor.fetchone()
+        if not cliente:
+            raise HTTPException(status_code=404, detail="Cliente no encontrado")
+
+        # Eliminar las compras asociadas al cliente
+        cursor.execute("DELETE FROM Compra WHERE id_cliente = %s", (id_cliente,))
+
+        # Eliminar el cliente
+        cursor.execute("DELETE FROM Cliente WHERE id = %s", (id_cliente,))
+        db.commit()
+
+        return {"message": f"Cliente con ID {id_cliente} y sus compras fueron eliminados exitosamente"}
+
+    except mysql.connector.Error as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cursor.close()
