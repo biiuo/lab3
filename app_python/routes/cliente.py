@@ -146,3 +146,34 @@ def eliminar_cliente(id_cliente: int, db = Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         cursor.close()
+
+#Consulta 1
+@router.get("/reporte/pedidos", tags=["Reportes"])
+def clientes_cantidad_pedidos(db=Depends(get_db)):
+    cursor = db.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT CONCAT(nombre, " ", apellidos) AS nombre_completo,
+                   COUNT(codigo_producto) AS cantidad_pedidos
+            FROM cliente
+            LEFT JOIN compra ON id_cliente = id
+            GROUP BY id;
+        """)
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+
+@router.get("/reporte/sin-pedidos", tags=["Reportes"])
+def clientes_sin_pedidos(db=Depends(get_db)):
+    cursor = db.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT CONCAT(nombre, " ", apellidos) AS nombre_completo
+            FROM cliente
+            WHERE id NOT IN (
+                SELECT id_cliente FROM compra
+            );
+        """)
+        return cursor.fetchall()
+    finally:
+        cursor.close()
