@@ -176,6 +176,9 @@
         
         .query-results th {
             color: rgba(148, 77, 255, 255);
+            position: sticky;
+            top: 0;
+            background-color: white;
         }
         
         .query-results tr:hover {
@@ -187,6 +190,46 @@
             gap: 2vw;
             margin-bottom: 2vh;
             justify-content: center;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+            color: rgba(148, 77, 255, 255);
+        }
+
+        .error-message {
+            color: red;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #ffeeee;
+            border-radius: 5px;
+        }
+
+        .success-message {
+            color: green;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #eeffee;
+            border-radius: 5px;
+        }
+
+        .query-results-container {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+        
+        .summary {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .money {
+            text-align: right;
         }
         
         @media (max-width: 768px) {
@@ -212,6 +255,16 @@
                 flex-direction: column;
                 gap: 1vh;
             }
+        }
+
+        .product-list {
+            margin-left: 20px;
+            list-style-type: none;
+        }
+        
+        .product-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
         }
     </style>
 </head>
@@ -243,47 +296,331 @@
                 </div>
                 
                 <div class="query-actions">
-                    <button class="query-button">Consulta 1</button>
-                    <div style="width: 30px;"></div>
-                    <button class="query-button">Consulta 2</button>
-                    <div style="width: 40px;"></div>
-                    <button class="query-button">Consulta 3</button>
-                    <div style="width: 40px;"></div>
-                    <button class="query-button">Consulta 4</button>
+                    <button class="query-button" onclick="ejecutarConsulta1()">Clientes con pedidos</button>
+                    <button class="query-button" onclick="ejecutarConsultaClientesSinPedidos()">Clientes sin pedidos</button>
+                    <button class="query-button" onclick="ejecutarConsultaDetalleCompras()">Detalle de compras</button>
+                    <button class="query-button" onclick="ejecutarConsultaProveedoresProductos()">Proveedores y productos</button>
                 </div>
                 
-                <table class="query-results">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Descripción</th>
-                            <th>Resultados</th>
-                            <th>Fecha</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>Clientes con más pedidos</td>
-                            <td>25 registros</td>
-                            <td>2023-05-15</td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>Productos más vendidos</td>
-                            <td>10 registros</td>
-                            <td>2023-05-16</td>
-                        </tr>
-                        <tr>
-                            <td>3</td>
-                            <td>Proveedores por ciudad</td>
-                            <td>8 registros</td>
-                            <td>2023-05-17</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div id="loading" class="loading">
+                    Cargando resultados...
+                </div>
+
+                <div id="messages"></div>
+                
+                <div id="resultados-consulta">
+                    </div>
             </div>
         </div>
     </div>
+
+    <script>
+        function mostrarMensaje(texto, tipo = 'error') {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = `
+                <div class="${tipo}-message">
+                    ${texto}
+                </div>
+            `;
+            setTimeout(() => { messagesDiv.innerHTML = ''; }, 5000);
+        }
+
+        function ejecutarConsulta1() {
+            const resultadosDiv = document.getElementById('resultados-consulta');
+            const loadingDiv = document.getElementById('loading');
+            
+            resultadosDiv.innerHTML = '';
+            loadingDiv.style.display = 'block';
+            
+            fetch('/consultas/clientes-pedidos')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    loadingDiv.style.display = 'none';
+                    
+                    if (data.error) {
+                        mostrarMensaje(data.error);
+                        return;
+                    }
+                    
+                    if (data.length === 0) {
+                        resultadosDiv.innerHTML = '<p class="success-message">No se encontraron clientes con pedidos</p>';
+                        return;
+                    }
+                    
+                    let html = `
+                        <h3>Clientes con pedidos realizados</h3>
+                        <table class="query-results">
+                            <thead>
+                                <tr>
+                                    <th>ID Cliente</th>
+                                    <th>Nombre</th>
+                                    <th>Apellidos</th>
+                                    <th>Cantidad de Pedidos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    data.forEach(item => {
+                        html += `
+                            <tr>
+                                <td>${item.id_cliente}</td>
+                                <td>${item.nombre}</td>
+                                <td>${item.apellidos}</td>
+                                <td>${item.cantidad_pedidos}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                            </tbody>
+                        </table>
+                        <p class="success-message">Total de clientes: ${data.length}</p>
+                    `;
+                    
+                    resultadosDiv.innerHTML = html;
+                })
+                .catch(error => {
+                    loadingDiv.style.display = 'none';
+                    mostrarMensaje(`Error al cargar los datos: ${error.message}`);
+                });
+        }
+
+        function ejecutarConsultaClientesSinPedidos() {
+            const resultadosDiv = document.getElementById('resultados-consulta');
+            const loadingDiv = document.getElementById('loading');
+            
+            resultadosDiv.innerHTML = '';
+            loadingDiv.style.display = 'block';
+            
+            fetch('/consultas/clientes-sin-pedidos')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    loadingDiv.style.display = 'none';
+                    
+                    if (data.error) {
+                        mostrarMensaje(data.error);
+                        return;
+                    }
+                    
+                    if (data.length === 0) {
+                        resultadosDiv.innerHTML = '<p class="success-message">¡Todos los clientes han realizado al menos un pedido!</p>';
+                        return;
+                    }
+                    
+                    let html = `
+                        <h3>Clientes sin pedidos registrados</h3>
+                        <table class="query-results">
+                            <thead>
+                                <tr>
+                                    <th>ID Cliente</th>
+                                    <th>Nombre</th>
+                                    <th>Apellidos</th>
+                                    <th>Dirección</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    data.forEach(item => {
+                        html += `
+                            <tr>
+                                <td>${item.id}</td>
+                                <td>${item.nombre}</td>
+                                <td>${item.apellidos}</td>
+                                <td>${item.direccion || 'No especificada'}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                            </tbody>
+                        </table>
+                        <p class="success-message">Total de clientes sin pedidos: ${data.length}</p>
+                    `;
+                    
+                    resultadosDiv.innerHTML = html;
+                })
+                .catch(error => {
+                    loadingDiv.style.display = 'none';
+                    mostrarMensaje(`Error al cargar los datos: ${error.message}`);
+                });
+        }
+
+        function ejecutarConsultaDetalleCompras() {
+            const resultadosDiv = document.getElementById('resultados-consulta');
+            const loadingDiv = document.getElementById('loading');
+            
+            resultadosDiv.innerHTML = '';
+            loadingDiv.style.display = 'block';
+            
+            fetch('/consultas/detalle-compras')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    loadingDiv.style.display = 'none';
+                    
+                    if (data.error) {
+                        mostrarMensaje(data.error);
+                        return;
+                    }
+                    
+                    if (data.length === 0) {
+                        resultadosDiv.innerHTML = '<p class="success-message">No se encontraron compras registradas</p>';
+                        return;
+                    }
+                    
+                    let html = `
+                        <h3>Detalle de Compras</h3>
+                        <div class="query-results-container">
+                            <table class="query-results">
+                                <thead>
+                                    <tr>
+                                        <th>Cliente</th>
+                                        <th>Producto</th>
+                                        <th>Cantidad</th>
+                                        <th>Precio Unitario</th>
+                                        <th>Total</th>
+                                        <th>Proveedor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    let granTotal = 0;
+                    
+                    data.forEach(item => {
+                        const total = item.cantidad * item.precio_unitario;
+                        granTotal += total;
+                        
+                        html += `
+                            <tr>
+                                <td>${item.nombre_cliente} ${item.apellidos_cliente}</td>
+                                <td>${item.nombre_producto}</td>
+                                <td>${item.cantidad}</td>
+                                <td class="money">$${item.precio_unitario.toFixed(2)}</td>
+                                <td class="money">$${total.toFixed(2)}</td>
+                                <td>${item.nombre_proveedor}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                </tbody>
+                            </table>
+                            <div class="summary">
+                                Total general: $${granTotal.toFixed(2)}
+                            </div>
+                        </div>
+                    `;
+                    
+                    resultadosDiv.innerHTML = html;
+                })
+                .catch(error => {
+                    loadingDiv.style.display = 'none';
+                    mostrarMensaje(`Error al cargar los datos: ${error.message}`);
+                });
+        }
+
+        function ejecutarConsultaProveedoresProductos() {
+            const resultadosDiv = document.getElementById('resultados-consulta');
+            const loadingDiv = document.getElementById('loading');
+            
+            resultadosDiv.innerHTML = '';
+            loadingDiv.style.display = 'block';
+            
+            fetch('/consultas/proveedores-productos')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    loadingDiv.style.display = 'none';
+                    
+                    if (data.error) {
+                        mostrarMensaje(data.error);
+                        return;
+                    }
+                    
+                    if (data.length === 0) {
+                        resultadosDiv.innerHTML = '<p class="success-message">No se encontraron proveedores con productos</p>';
+                        return;
+                    }
+                    
+                    let html = `
+                        <h3>Proveedores y productos suministrados</h3>
+                        <div class="query-results-container">
+                            <table class="query-results">
+                                <thead>
+                                    <tr>
+                                        <th>Proveedor</th>
+                                        <th>NIT</th>
+                                        <th>Dirección</th>
+                                        <th>Productos Suministrados</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    data.forEach(proveedor => {
+                        html += `
+                            <tr>
+                                <td>${proveedor.nombre_proveedor}</td>
+                                <td>${proveedor.nit}</td>
+                                <td>${proveedor.direccion}</td>
+                                <td>
+                                    <ul class="product-list">
+                        `;
+                        
+                        proveedor.productos.forEach(producto => {
+                            html += `
+                                <li>
+                                    ${producto.nombre} (Código: ${producto.codigo}) - 
+                                    Precio: $${producto.precio_unitario.toFixed(2)}
+                                </li>
+                            `;
+                        });
+                        
+                        html += `
+                                    </ul>
+                                    <strong>Total productos: ${proveedor.productos.length}</strong>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                </tbody>
+                            </table>
+                            <div class="summary">
+                                Total de proveedores: ${data.length}
+                            </div>
+                        </div>
+                    `;
+                    
+                    resultadosDiv.innerHTML = html;
+                })
+                .catch(error => {
+                    loadingDiv.style.display = 'none';
+                    mostrarMensaje(`Error al cargar los datos: ${error.message}`);
+                });
+        }
+    </script>
 </body>
 </html>

@@ -289,31 +289,34 @@
                 {% endif %}
                 
                 <div class="action-buttons">
-                    <button class="action-button" onclick="openModal('add')">Realizar Pedido</button>
+                    <button class="action-button" onclick="openModal()">Realizar Pedido</button>
                 </div>
                 
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
                             <th>ID Cliente</th>
+                            <th>Cliente</th>
                             <th>Código Producto</th>
-                            <th>Dirección</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
                             <th>Fecha de compra</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for pedido in pedidos %}
-                        <tr>
-                            <td>{{ pedido.id }}</td>
+                        <tr data-id-cliente="{{ pedido.id_cliente }}" 
+                            data-codigo-producto="{{ pedido.codigo_producto }}" 
+                            data-fecha-compra="{{ pedido.fecha_compra }}">
                             <td>{{ pedido.id_cliente }}</td>
+                            <td>{{ pedido.nombre_cliente }} {{ pedido.apellidos }}</td>
                             <td>{{ pedido.codigo_producto }}</td>
-                            <td>{{ pedido.direccion }}</td>
+                            <td>{{ pedido.nombre_producto }}</td>
+                            <td>{{ pedido.cantidad }}</td>
                             <td>{{ pedido.fecha_compra }}</td>
                             <td>
-                                <button class="action-button" onclick="openModal('edit', {{ pedido.id }}, {{ pedido.id_cliente }}, '{{ pedido.codigo_producto }}', '{{ pedido.direccion }}', '{{ pedido.fecha_compra }}')">Editar</button>
-                                <button class="action-button" onclick="eliminarPedido({{ pedido.id }})">Eliminar</button>
+                                <button class="action-button" onclick="eliminarPedido(this)">Eliminar</button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -323,15 +326,14 @@
         </div>
     </div>
 
-    <!-- Modal para agregar/editar pedidos -->
+    <!-- Modal para agregar pedidos -->
     <div id="pedidoModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
-            <h2 id="modalTitle">Realizar Pedido</h2>
-            <form id="pedidoForm" method="post">
-                <input type="hidden" id="pedidoId" name="pedido_id">
+            <h2>Realizar Pedido</h2>
+            <form id="pedidoForm" method="post" action="/pedidos/agregar">
                 <div class="form-group">
-                    <label for="id_cliente">ID Cliente:</label>
+                    <label for="id_cliente">Cliente:</label>
                     <select id="id_cliente" name="id_cliente" required>
                         {% for cliente in clientes %}
                         <option value="{{ cliente.id }}">{{ cliente.id }} - {{ cliente.nombre }} {{ cliente.apellidos }}</option>
@@ -339,7 +341,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="codigo_producto">Código Producto:</label>
+                    <label for="codigo_producto">Producto:</label>
                     <select id="codigo_producto" name="codigo_producto" required>
                         {% for producto in productos %}
                         <option value="{{ producto.codigo }}">{{ producto.codigo }} - {{ producto.nombre }}</option>
@@ -347,12 +349,12 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="direccion">Dirección:</label>
-                    <input type="text" id="direccion" name="direccion" required>
+                    <label for="cantidad">Cantidad:</label>
+                    <input type="number" id="cantidad" name="cantidad" min="1" required>
                 </div>
                 <div class="form-group">
                     <label for="fecha_compra">Fecha de Compra:</label>
-                    <input type="date" id="fecha_compra" name="fecha_compra" required>
+                    <input type="datetime-local" id="fecha_compra" name="fecha_compra" required>
                 </div>
                 <button type="submit" class="action-button">Guardar</button>
             </form>
@@ -362,31 +364,12 @@
     <script>
         // Variables para el modal
         const modal = document.getElementById("pedidoModal");
-        const modalTitle = document.getElementById("modalTitle");
-        const pedidoForm = document.getElementById("pedidoForm");
-        let currentAction = "";
         
         // Abrir modal
-        function openModal(action, id = null, id_cliente = "", codigo_producto = "", direccion = "", fecha_compra = "") {
-            currentAction = action;
-            
-            if (action === "add") {
-                modalTitle.textContent = "Realizar Pedido";
-                pedidoForm.action = "/pedidos/agregar";
-                pedidoForm.reset();
-                document.getElementById("pedidoId").value = "";
-                // Establecer fecha actual por defecto
-                document.getElementById("fecha_compra").valueAsDate = new Date();
-            } else if (action === "edit") {
-                modalTitle.textContent = "Editar Pedido";
-                pedidoForm.action = `/pedidos/editar/${id}`;
-                document.getElementById("pedidoId").value = id;
-                document.getElementById("id_cliente").value = id_cliente;
-                document.getElementById("codigo_producto").value = codigo_producto;
-                document.getElementById("direccion").value = direccion;
-                document.getElementById("fecha_compra").value = fecha_compra;
-            }
-            
+        function openModal() {
+            const now = new Date();
+            const localDateTime = now.toISOString().slice(0, 16);
+            document.getElementById("fecha_compra").value = localDateTime;
             modal.style.display = "block";
         }
         
@@ -396,9 +379,14 @@
         }
         
         // Eliminar pedido
-        function eliminarPedido(id) {
+        function eliminarPedido(button) {
+            const row = button.closest('tr');
+            const id_cliente = row.getAttribute('data-id-cliente');
+            const codigo_producto = row.getAttribute('data-codigo-producto');
+            const fecha_compra = row.getAttribute('data-fecha-compra');
+            
             if (confirm("¿Estás seguro de que deseas eliminar este pedido?")) {
-                window.location.href = `/pedidos/eliminar/${id}`;
+                window.location.href = `/pedidos/eliminar?id_cliente=${id_cliente}&codigo_producto=${codigo_producto}&fecha_compra=${encodeURIComponent(fecha_compra)}`;
             }
         }
         
