@@ -6,7 +6,7 @@ from mysql.connector import Error  # Importamos la clase Error para manejar exce
 DB_CONFIG = {
     "host": "localhost",       # Servidor donde se encuentra la base de datos (local en este caso)
     "user": "root",            # Usuario de la base de datos
-    "password": "1Semeolvido.", # Contraseña del usuario (considera no compartir contraseñas en código público)
+    "password": "Drosekobedg23", # Contraseña del usuario (considera no compartir contraseñas en código público)
     "database": "venta",       # Nombre de la base de datos a la que queremos conectarnos
 }
 

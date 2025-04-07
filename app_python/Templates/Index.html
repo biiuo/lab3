@@ -50,7 +50,7 @@
         .content-area {
             display: flex;
             flex: 1;
-            min-height: 0; /* Necesario para Firefox */
+            min-height: 0;
         }
         
         .sidebar {
@@ -86,16 +86,20 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            position: relative;
+            left: 0;
+            text-decoration: none; /* Elimina el subrayado */
+            display: block; /* Para que ocupe todo el ancho */
         }
         
         .sidebar-button:hover {
             color: rgba(178, 102, 255, 255);
-            text-decoration: underline;
+            left: 5px;
         }
         
         .sidebar-button:active {
             color: rgba(118, 0, 255, 255);
-            padding-left: 1.2vw;
+            left: 8px;
         }
         
         .header-button {
@@ -107,6 +111,7 @@
             font-size: clamp(12px, 1.5vw, 16px);
             cursor: pointer;
             transition: all 0.3s ease;
+            text-decoration: none; /* Elimina el subrayado */
         }
         
         .header-button:hover {
@@ -139,7 +144,7 @@
     <div class="main-container">
         <div class="title-bar">
             <div class="button-group">
-                <button class="header-button">Menú</button>
+                <a href="/" class="header-button">Menú</a>
                 <div class="spacer"></div>
                 <button class="header-button">Acción</button>
             </div>
@@ -147,18 +152,17 @@
         
         <div class="content-area">
             <div class="sidebar">
-                <button class="sidebar-button">Opción 1</button>
-                <button class="sidebar-button">Opción 2</button>
-                <button class="sidebar-button">Opción 3</button>
-                <button class="sidebar-button">Opción 4</button>
-                <button class="sidebar-button">Opción 5</button>
-                <button class="sidebar-button">Opción 6</button>
-                <button class="sidebar-button">Opción 7</button>
-                <button class="sidebar-button">Opción 8</button>
+                <button class="sidebar-button">Diagrama entidad relación</button>
+                <button class="sidebar-button">Modelo Relacional</button>
+                <a href="/clientes" class="sidebar-button">Clientes</a>
+                <a href="/productos" class="sidebar-button">Productos</a>
+                <a href="/proveedores" class="sidebar-button">Proveedores</a>
+                <a href="/pedidos" class="sidebar-button">Pedidos</a>
+                <a href="/consultas" class="sidebar-button">Consultas</a>
+
             </div>
             
             <div class="main-content">
-                <!-- Contenido principal se ajustará automáticamente -->
                 <h2 style="color: rgba(148, 77, 255, 255);">Contenido Principal</h2>
                 <p>Este área se redimensionará automáticamente según el tamaño de la ventana.</p>
             </div>

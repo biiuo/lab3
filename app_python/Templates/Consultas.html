@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultas - Sistema de Gestión</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        .main-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background-color: rgb(230, 230, 230);
+        }
+        
+        .title-bar {
+            min-height: 10vh;
+            max-height: 15vh;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            padding: 0 2vw;
+            border-bottom: 1px solid #ccc;
+        }
+        
+        .button-group {
+            display: flex;
+            align-items: center;
+            gap: 2vw;
+            width: 100%;
+        }
+        
+        .spacer {
+            flex-grow: 1;
+        }
+        
+        .content-area {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+        
+        .sidebar {
+            width: 20%;
+            min-width: 150px;
+            max-width: 250px;
+            background-color: #f0f0f0;
+            padding: 2vh 1vw;
+            border-right: 1px solid #ccc;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5vh;
+            overflow-y: auto;
+        }
+        
+        .main-content {
+            flex: 1;
+            background-color: white;
+            padding: 2vh;
+            overflow: auto;
+        }
+        
+        .sidebar-button {
+            padding: 1.5vh 1vw;
+            text-align: left;
+            background-color: transparent;
+            border: none;
+            border-radius: 5px;
+            color: rgba(148, 77, 255, 255);
+            font-size: clamp(12px, 1.5vw, 16px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: relative;
+            left: 0;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .sidebar-button:hover {
+            color: rgba(178, 102, 255, 255);
+            left: 5px;
+        }
+        
+        .sidebar-button:active {
+            color: rgba(118, 0, 255, 255);
+            left: 8px;
+        }
+        
+        .sidebar-button.active {
+            font-weight: bold;
+            color: rgba(118, 0, 255, 255);
+        }
+        
+        .header-button {
+            padding: 1vh 2vw;
+            background-color: transparent;
+            border: 1px solid rgba(148, 77, 255, 0.5);
+            border-radius: 5px;
+            color: rgba(148, 77, 255, 255);
+            font-size: clamp(12px, 1.5vw, 16px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .header-button:hover {
+            background-color: rgba(148, 77, 255, 0.1);
+            border-color: rgba(148, 77, 255, 0.8);
+        }
+        
+        .action-button {
+            padding: 1vh 2vw;
+            background-color: transparent;
+            border: 1px solid rgba(148, 77, 255, 0.5);
+            border-radius: 5px;
+            color: rgba(148, 77, 255, 255);
+            font-size: clamp(12px, 1.5vw, 16px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .action-button:hover {
+            background-color: rgba(148, 77, 255, 0.1);
+            border-color: rgba(148, 77, 255, 0.8);
+        }
+
+        .query-button {
+            padding: 1vh 2vw;
+            background-color: transparent;
+            border: 1px solid rgba(148, 77, 255, 0.5);
+            border-radius: 5px;
+            color: rgba(148, 77, 255, 255);
+            font-size: clamp(12px, 1.5vw, 16px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .query-button:hover {
+            background-color: rgba(148, 77, 255, 0.1);
+            border-color: rgba(148, 77, 255, 0.8);
+        }
+        
+        .section-title {
+            color: rgba(148, 77, 255, 255);
+            margin-bottom: 2vh;
+            font-size: 20px;
+        }
+        
+        .query-results {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2vh;
+        }
+        
+        .query-results th, .query-results td {
+            padding: 1vh 1vw;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .query-results th {
+            color: rgba(148, 77, 255, 255);
+        }
+        
+        .query-results tr:hover {
+            background-color: rgba(148, 77, 255, 0.05);
+        }
+        
+        .query-actions {
+            display: flex;
+            gap: 2vw;
+            margin-bottom: 2vh;
+            justify-content: center;
+        }
+        
+        @media (max-width: 768px) {
+            .content-area {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                max-width: none;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 1vh;
+                gap: 1vw;
+            }
+            
+            .sidebar-button {
+                white-space: nowrap;
+                padding: 1vh 3vw;
+            }
+            
+            .query-actions {
+                flex-direction: column;
+                gap: 1vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="title-bar">
+            <div class="button-group">
+                <a href="/" class="header-button">Menú</a>
+                <div class="spacer"></div>
+                <button class="header-button">Autores</button>
+            </div>
+        </div>
+        
+        <div class="content-area">
+            <div class="sidebar">
+                <button class="sidebar-button">Diagrama entidad relación</button>
+                <button class="sidebar-button">Modelo Relacional</button>
+                <a href="/clientes" class="sidebar-button">Clientes</a>
+                <a href="/productos" class="sidebar-button">Productos</a>
+                <a href="/proveedores" class="sidebar-button">Proveedores</a>
+                <a href="/pedidos" class="sidebar-button">Pedidos</a>
+                <a href="/consultas" class="sidebar-button active">Consultas</a>
+            </div>
+            
+            <div class="main-content">
+                <div style="display: flex; align-items: center; margin-bottom: 40px;">
+                    <div style="width: 40px;"></div>
+                    <h2 class="section-title">Consultas</h2>
+                </div>
+                
+                <div class="query-actions">
+                    <button class="query-button">Consulta 1</button>
+                    <div style="width: 30px;"></div>
+                    <button class="query-button">Consulta 2</button>
+                    <div style="width: 40px;"></div>
+                    <button class="query-button">Consulta 3</button>
+                    <div style="width: 40px;"></div>
+                    <button class="query-button">Consulta 4</button>
+                </div>
+                
+                <table class="query-results">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Descripción</th>
+                            <th>Resultados</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Clientes con más pedidos</td>
+                            <td>25 registros</td>
+                            <td>2023-05-15</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Productos más vendidos</td>
+                            <td>10 registros</td>
+                            <td>2023-05-16</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Proveedores por ciudad</td>
+                            <td>8 registros</td>
+                            <td>2023-05-17</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes - Sistema de Gestión</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        .main-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background-color: rgb(230, 230, 230);
+        }
+        
+        .title-bar {
+            min-height: 10vh;
+            max-height: 15vh;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            padding: 0 2vw;
+            border-bottom: 1px solid #ccc;
+        }
+        
+        .button-group {
+            display: flex;
+            align-items: center;
+            gap: 2vw;
+            width: 100%;
+        }
+        
+        .spacer {
+            flex-grow: 1;
+        }
+        
+        .content-area {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+        
+        .sidebar {
+            width: 20%;
+            min-width: 150px;
+            max-width: 250px;
+            background-color: #f0f0f0;
+            padding: 2vh 1vw;
+            border-right: 1px solid #ccc;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5vh;
+            overflow-y: auto;
+        }
+        
+        .main-content {
+            flex: 1;
+            background-color: white;
+            padding: 2vh;
+            overflow: auto;
+        }
+        
+        .sidebar-button {
+            padding: 1.5vh 1vw;
+            text-align: left;
+            background-color: transparent;
+            border: none;
+            border-radius: 5px;
+            color: rgba(148, 77, 255, 255);
+            font-size: clamp(12px, 1.5vw, 16px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: relative;
+            left: 0;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .sidebar-button:hover {
+            color: rgba(178, 102, 255, 255);
+            left: 5px;
+        }
+        
+        .sidebar-button:active {
+            color: rgba(118, 0, 255, 255);
+            left: 8px;
+        }
+        
+        .sidebar-button.active {
+            font-weight: bold;
+            color: rgba(118, 0, 255, 255);
+        }
+        
+        .header-button {
+            padding: 1vh 2vw;
+            background-color: transparent;
+            border: 1px solid rgba(148, 77, 255, 0.5);
+            border-radius: 5px;
+            color: rgba(148, 77, 255, 255);
+            font-size: clamp(12px, 1.5vw, 16px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .header-button:hover {
+            background-color: rgba(148, 77, 255, 0.1);
+            border-color: rgba(148, 77, 255, 0.8);
+        }
+        
+        .action-button {
+            padding: 1vh 2vw;
+            background-color: transparent;
+            border: 1px solid rgba(148, 77, 255, 0.5);
+            border-radius: 5px;
+            color: rgba(148, 77, 255, 255);
+            font-size: clamp(12px, 1.5vw, 16px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .action-button:hover {
+            background-color: rgba(148, 77, 255, 0.1);
+            border-color: rgba(148, 77, 255, 0.8);
+        }
+        
+        .section-title {
+            color: rgba(148, 77, 255, 255);
+            margin-bottom: 2vh;
+            font-size: 20px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2vh;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 1vh 1vw;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .data-table th {
+            color: rgba(148, 77, 255, 255);
+            position: sticky;
+            top: 0;
+            background-color: white;
+        }
+        
+        .data-table tr:hover {
+            background-color: rgba(148, 77, 255, 0.05);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 2vw;
+            margin-bottom: 2vh;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%;
+            border-radius: 5px;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: black;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .error-message {
+            color: red;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .content-area {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                max-width: none;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 1vh;
+                gap: 1vw;
+            }
+            
+            .sidebar-button {
+                white-space: nowrap;
+                padding: 1vh 3vw;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 1vh;
+            }
+            
+            .modal-content {
+                width: 90%;
+                margin: 20% auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="title-bar">
+            <div class="button-group">
+                <a href="/" class="header-button">Menú</a>
+                <div class="spacer"></div>
+                <button class="header-button">Autores</button>
+            </div>
+        </div>
+        
+        <div class="content-area">
+            <div class="sidebar">
+                <button class="sidebar-button">Diagrama entidad relación</button>
+                <button class="sidebar-button">Modelo Relacional</button>
+                <a href="/clientes" class="sidebar-button active">Clientes</a>
+                <a href="/productos" class="sidebar-button">Productos</a>
+                <a href="/proveedores" class="sidebar-button">Proveedores</a>
+                <a href="/pedidos" class="sidebar-button">Pedidos</a>
+                <a href="/consultas" class="sidebar-button">Consultas</a>
+            </div>
+            
+            <div class="main-content">
+                <h2 class="section-title">Clientes</h2>
+                
+                {% if error %}
+                <div class="error-message">{{ error }}</div>
+                {% endif %}
+                
+                <div class="action-buttons">
+                    <button class="action-button" onclick="openModal('add')">Agregar Cliente</button>
+                </div>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Apellidos</th>
+                            <th>Fecha Nacimiento</th>
+                            <th>Dirección</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cliente in clientes %}
+                        <tr>
+                            <td>{{ cliente.id }}</td>
+                            <td>{{ cliente.nombre }}</td>
+                            <td>{{ cliente.apellidos }}</td>
+                            <td>{{ cliente.fecha_nacimiento }}</td>
+                            <td>{{ cliente.direccion }}</td>
+                            <td>
+                                <button class="action-button" onclick="openModal('edit', {{ cliente.id }}, '{{ cliente.nombre }}', '{{ cliente.apellidos }}', '{{ cliente.fecha_nacimiento }}', '{{ cliente.direccion }}')">Editar</button>
+                                <button class="action-button" onclick="eliminarCliente({{ cliente.id }})">Eliminar</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para agregar/editar clientes -->
+    <div id="clientModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Agregar Cliente</h2>
+            <form id="clientForm" method="post">
+                <input type="hidden" id="clienteId" name="cliente_id">
+                <div class="form-group">
+                    <label for="nombre">Nombre:</label>
+                    <input type="text" id="nombre" name="nombre" required>
+                </div>
+                <div class="form-group">
+                    <label for="apellidos">Apellidos:</label>
+                    <input type="text" id="apellidos" name="apellidos" required>
+                </div>
+                <div class="form-group">
+                    <label for="fecha_nacimiento">Fecha de Nacimiento:</label>
+                    <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" required>
+                </div>
+                <div class="form-group">
+                    <label for="direccion">Dirección:</label>
+                    <input type="text" id="direccion" name="direccion" required>
+                </div>
+                <button type="submit" class="action-button">Guardar</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Variables para el modal
+        const modal = document.getElementById("clientModal");
+        const modalTitle = document.getElementById("modalTitle");
+        const clientForm = document.getElementById("clientForm");
+        let currentAction = "";
+        
+        // Abrir modal
+        function openModal(action, id = null, nombre = "", apellidos = "", fecha_nacimiento = "", direccion = "") {
+            currentAction = action;
+            
+            if (action === "add") {
+                modalTitle.textContent = "Agregar Cliente";
+                clientForm.action = "/clientes/agregar";
+                clientForm.reset();
+                document.getElementById("clienteId").value = "";
+            } else if (action === "edit") {
+                modalTitle.textContent = "Editar Cliente";
+                clientForm.action = `/clientes/editar/${id}`;
+                document.getElementById("clienteId").value = id;
+                document.getElementById("nombre").value = nombre;
+                document.getElementById("apellidos").value = apellidos;
+                document.getElementById("fecha_nacimiento").value = fecha_nacimiento;
+                document.getElementById("direccion").value = direccion;
+            }
+            
+            modal.style.display = "block";
+        }
+        
+        // Cerrar modal
+        function closeModal() {
+            modal.style.display = "none";
+        }
+        
+        // Eliminar cliente
+        function eliminarCliente(id) {
+            if (confirm("¿Estás seguro de que deseas eliminar este cliente?")) {
+                window.location.href = `/clientes/eliminar/${id}`;
+            }
+        }
+        
+        // Cerrar modal al hacer clic fuera del contenido
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
